@@ -3,10 +3,9 @@ package task
 import (
 	"flag"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
-
-	"github.com/go-ricrob/game/types"
 )
 
 // Parameter name constants.
@@ -42,44 +41,6 @@ var (
 	defTargetSymbol = "Cosmic"
 )
 
-func convertSideToBool(b byte) (bool, error) {
-	switch b {
-	case 'F', 'f':
-		return true, nil
-	case 'B', 'b':
-		return false, nil
-	default:
-		return false, fmt.Errorf("invalid tile side: %c", b)
-	}
-}
-
-func parseTileID(s string, tileID *TileID) error {
-	if len(s) != 3 {
-		return fmt.Errorf("invalid tile length: %s", s)
-	}
-
-	i64, err := strconv.ParseInt(s[1:2], 10, 8)
-	if err != nil {
-		return fmt.Errorf("invalid tile number %s - %w", s, err)
-	}
-	front, err := convertSideToBool(s[2])
-	if err != nil {
-		return fmt.Errorf("invalid tile side %s - %w", s, err)
-	}
-
-	setID := s[0]
-	if setID != 'A' && setID != 'B' {
-		return fmt.Errorf("invalid tile set id %s", s)
-	}
-	tileNo := byte(i64)
-	if tileNo < 1 || tileNo > 4 {
-		return fmt.Errorf("invalid tile number %s", s)
-	}
-
-	tileID.SetID, tileID.TileNo, tileID.Front = setID, tileNo, front
-	return nil
-}
-
 func parseCoordinate(s string, coord *Coordinate) error {
 	p := strings.Split(s, ",")
 	if len(p) != 2 {
@@ -107,10 +68,10 @@ var symbolMap = map[string]Symbol{
 }
 
 var targetColorMap = map[string]Color{
-	"Yellow": Yellow,
-	"Red":    Red,
-	"Green":  Green,
-	"Blue":   Blue,
+	"yellow": Yellow,
+	"red":    Red,
+	"green":  Green,
+	"blue":   Blue,
 }
 
 func parseSymbol(s string, ptr *Symbol) error {
@@ -131,101 +92,65 @@ func parseColor(s string, ptr *Color) error {
 	return nil
 }
 
-// ParseFlags returns a task object build by command line flags.
-func ParseFlags() (*Task, error) {
+func parseFlags(name string, cmdArgs []string, errorHandling flag.ErrorHandling) (*Task, error) {
 
-	var ttl, ttr, tbr, tbl string
-	flag.StringVar(&ttl, prmTopLeftTile, defTopLeftTile, "top left tile")
-	flag.StringVar(&ttr, prmTopRightTile, defTopRightTile, "top right tile")
-	flag.StringVar(&tbr, prmBottomRightTile, defBottomRightTile, "bottom right tile")
-	flag.StringVar(&tbl, prmBottomLeftTile, defBottomLeftTile, "top bottom left tile")
+	t := newTask()
+
+	fs := flag.NewFlagSet(name, errorHandling)
+
+	fs.StringVar(&t.Args.TopLeftTile, prmTopLeftTile, defTopLeftTile, "top left tile")
+	fs.StringVar(&t.Args.TopRightTile, prmTopRightTile, defTopRightTile, "top right tile")
+	fs.StringVar(&t.Args.BottomLeftTile, prmBottomLeftTile, defBottomLeftTile, "top bottom left tile")
+	fs.StringVar(&t.Args.BottomRightTile, prmBottomRightTile, defBottomRightTile, "bottom right tile")
 
 	var ry, rr, rg, rb, rs string
 
-	flag.StringVar(&ry, prmYellowRobot, defYellowRobot, "yellow robot position x,y")
-	flag.StringVar(&rr, prmRedRobot, defRedRobot, "red robot position x,y")
-	flag.StringVar(&rg, prmGreenRobot, defGreenRobot, "green robot position x,y")
-	flag.StringVar(&rb, prmBlueRobot, defBlueRobot, "blue robot position x,y")
-	flag.StringVar(&rs, prmSilverRobot, defSilverRobot, "silver robot position x,y")
+	fs.StringVar(&ry, prmYellowRobot, defYellowRobot, "yellow robot position x,y")
+	fs.StringVar(&rr, prmRedRobot, defRedRobot, "red robot position x,y")
+	fs.StringVar(&rg, prmGreenRobot, defGreenRobot, "green robot position x,y")
+	fs.StringVar(&rb, prmBlueRobot, defBlueRobot, "blue robot position x,y")
+	fs.StringVar(&rs, prmSilverRobot, defSilverRobot, "silver robot position x,y")
 
 	var ts, tc string
-	flag.StringVar(&ts, prmTargetSymbol, defTargetSymbol, "target symbol (Pyramid|Star|Moon|Saturn|Cosmic)")
-	flag.StringVar(&tc, prmTargetColor, "", "target color (yellow|red|green|blue) - leave empty for symbol Cosmic")
+	fs.StringVar(&ts, prmTargetSymbol, defTargetSymbol, "target symbol (Pyramid|Star|Moon|Saturn|Cosmic)")
+	fs.StringVar(&tc, prmTargetColor, "", "target color (yellow|red|green|blue) - leave empty for symbol Cosmic")
 
-	flag.Parse()
+	fs.Parse(cmdArgs)
 
-	task := newTask()
-
-	if err := parseTileID(ttl, &task.TopLeftTile); err != nil {
+	if err := parseCoordinate(ry, &t.Args.YellowRobot); err != nil {
 		return nil, err
 	}
-	if err := parseTileID(ttr, &task.TopRightTile); err != nil {
+	if err := parseCoordinate(rr, &t.Args.RedRobot); err != nil {
 		return nil, err
 	}
-	if err := parseTileID(tbr, &task.BottomRightTile); err != nil {
+	if err := parseCoordinate(rg, &t.Args.GreenRobot); err != nil {
 		return nil, err
 	}
-	if err := parseTileID(tbl, &task.BottomLeftTile); err != nil {
+	if err := parseCoordinate(rb, &t.Args.BlueRobot); err != nil {
+		return nil, err
+	}
+	if err := parseCoordinate(rs, &t.Args.SilverRobot); err != nil {
 		return nil, err
 	}
 
-	// check duplicate tiles
-	tiles := []string{ttl, ttr, tbr, tbl}
-	tileMap := map[string]bool{}
-	for _, tile := range tiles {
-		if _, ok := tileMap[tile]; ok {
-			return nil, fmt.Errorf("duplicate tile %s", tile)
+	if err := parseSymbol(ts, &t.Args.TargetSymbol); err != nil {
+		return nil, err
+	}
+
+	if t.Args.TargetSymbol != Cosmic { // no color for symbol cosmic
+		if err := parseColor(tc, &t.Args.TargetColor); err != nil {
+			return nil, err
 		}
-		tileMap[tile] = true
 	}
 
-	if err := parseCoordinate(ry, &task.YellowRobot); err != nil {
+	if err := t.checkArgs(); err != nil {
 		return nil, err
 	}
-	if err := parseCoordinate(rr, &task.RedRobot); err != nil {
-		return nil, err
-	}
-	if err := parseCoordinate(rg, &task.GreenRobot); err != nil {
-		return nil, err
-	}
-	if err := parseCoordinate(rb, &task.BlueRobot); err != nil {
-		return nil, err
-	}
-	if err := parseCoordinate(rs, &task.SilverRobot); err != nil {
-		return nil, err
-	}
-
-	if err := parseSymbol(ts, &task.TargetSymbol); err != nil {
-		return nil, err
-	}
-
-	if err := parseColor(ts, &task.TargetColor); err != nil {
-		return nil, err
-	}
-
-	// check robots
-	robots := []Coordinate{task.YellowRobot, task.RedRobot, task.GreenRobot, task.BlueRobot}
-	if task.SilverRobot.X != -1 && task.SilverRobot.Y != -1 {
-		robots = append(robots, task.SilverRobot)
-	}
-	robotMap := map[Coordinate]bool{}
-	for _, robot := range robots {
-		if types.IsCenterField(robot.X, robot.Y) {
-			return nil, fmt.Errorf("invalid robot coordinates %v - center field", robot)
-		}
-		if !types.IsInRange(robot.X, robot.Y) {
-			return nil, fmt.Errorf("invalid robot coordinates %v - field not in range", robot)
-		}
-		if _, ok := robotMap[robot]; ok {
-			return nil, fmt.Errorf("duplicate robot coordinates %v", robot)
-		}
-		robotMap[robot] = true
-	}
-
-	// TODO: check that robot does not sit on symbol
-
-	return task, nil
+	return t, nil
 }
+
+// ParseFlags returns a task object build by command line flags.
+func ParseFlags() (*Task, error) { return parseFlags(os.Args[0], os.Args[1:], flag.ExitOnError) }
 
 /*
 func makeFlag(prm string) string { return "-" + prm }
