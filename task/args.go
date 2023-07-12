@@ -3,9 +3,10 @@ package task
 import (
 	"flag"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
+
+	"github.com/go-ricrob/game/board"
 )
 
 // Parameter name constants.
@@ -23,6 +24,8 @@ const (
 
 	prmTargetSymbol = "ts"
 	prmTargetColor  = "tc"
+
+	prmNoSymbolCheck = "s"
 )
 
 // Default parameters.
@@ -39,6 +42,8 @@ var (
 	defSilverRobot = "-1,-1"
 
 	defTargetSymbol = "Cosmic"
+
+	defNoSymbolCheck = false
 )
 
 func parseCoordinate(s string, coord *Coordinate) error {
@@ -92,16 +97,89 @@ func parseColor(s string, ptr *Color) error {
 	return nil
 }
 
-func parseFlags(name string, cmdArgs []string, errorHandling flag.ErrorHandling) (*Task, error) {
+// Check flags for arguments
+const (
+	NoSymbolCheck = 1 << iota
+)
 
-	t := newTask()
+// Args holds the task arguments.
+type Args struct {
+	TopLeftTile     string
+	TopRightTile    string
+	BottomLeftTile  string
+	BottomRightTile string
+
+	YellowRobot Coordinate
+	RedRobot    Coordinate
+	GreenRobot  Coordinate
+	BlueRobot   Coordinate
+	SilverRobot Coordinate
+
+	TargetSymbol Symbol
+	TargetColor  Color
+}
+
+// HasSilverRobot returns true if the silver robot is used, else otherwise.
+func (a *Args) HasSilverRobot() bool { return a.SilverRobot.X != -1 && a.SilverRobot.Y != -1 }
+
+// Check checks validity and consistency of arguments.
+func (a *Args) Check(flag int) error {
+	// check tiles
+	tiles := []string{a.TopLeftTile, a.TopRightTile, a.BottomLeftTile, a.BottomRightTile}
+	tileMap := map[string]bool{}
+	for _, tile := range tiles {
+		if (len(tile)) != 3 || (tile[0] != 'A' && tile[0] != 'B') || (tile[1] < '1' || tile[1] > '4') || (tile[2] != 'F' && tile[2] != 'B') {
+			return fmt.Errorf("invalid tile %s", tile)
+		}
+		if _, ok := tileMap[tile]; ok {
+			return fmt.Errorf("duplicate tile %s", tile)
+		}
+		tileMap[tile] = true
+	}
+
+	b := board.New(map[board.TilePosition]string{
+		board.TopLeft:     a.TopLeftTile,
+		board.TopRight:    a.TopRightTile,
+		board.BottomLeft:  a.BottomLeftTile,
+		board.BottomRight: a.BottomRightTile,
+	})
+
+	// check robots
+	robots := []Coordinate{a.YellowRobot, a.RedRobot, a.GreenRobot, a.BlueRobot}
+	if a.SilverRobot.X != -1 && a.SilverRobot.Y != -1 {
+		robots = append(robots, a.SilverRobot)
+	}
+	robotMap := map[Coordinate]bool{}
+	for _, robot := range robots {
+		if !b.IsValidCoordinate(robot.X, robot.Y) {
+			return fmt.Errorf("invalid robot coordinates %v - center field", robot)
+		}
+		if flag&NoSymbolCheck == 0 {
+			field := b.Field(robot.X, robot.Y)
+			if field.Symbol() != board.NoSymbol {
+				return fmt.Errorf("robot %v sits on symbol %s color %s", robot, field.Symbol(), field.Color())
+			}
+		}
+		if _, ok := robotMap[robot]; ok {
+			return fmt.Errorf("duplicate robot position %v", robot)
+		}
+		robotMap[robot] = true
+	}
+	return nil
+}
+
+func parseArgs(name string, cmdArgs []string, errorHandling flag.ErrorHandling) (*Args, error) {
+	a := new(Args)
 
 	fs := flag.NewFlagSet(name, errorHandling)
 
-	fs.StringVar(&t.Args.TopLeftTile, prmTopLeftTile, defTopLeftTile, "top left tile")
-	fs.StringVar(&t.Args.TopRightTile, prmTopRightTile, defTopRightTile, "top right tile")
-	fs.StringVar(&t.Args.BottomLeftTile, prmBottomLeftTile, defBottomLeftTile, "top bottom left tile")
-	fs.StringVar(&t.Args.BottomRightTile, prmBottomRightTile, defBottomRightTile, "bottom right tile")
+	var noSymbolCheck bool
+	fs.BoolVar(&noSymbolCheck, prmNoSymbolCheck, defNoSymbolCheck, "do not check if robots sit on symbol")
+
+	fs.StringVar(&a.TopLeftTile, prmTopLeftTile, defTopLeftTile, "top left tile")
+	fs.StringVar(&a.TopRightTile, prmTopRightTile, defTopRightTile, "top right tile")
+	fs.StringVar(&a.BottomLeftTile, prmBottomLeftTile, defBottomLeftTile, "top bottom left tile")
+	fs.StringVar(&a.BottomRightTile, prmBottomRightTile, defBottomRightTile, "bottom right tile")
 
 	var ry, rr, rg, rb, rs string
 
@@ -117,40 +195,42 @@ func parseFlags(name string, cmdArgs []string, errorHandling flag.ErrorHandling)
 
 	fs.Parse(cmdArgs)
 
-	if err := parseCoordinate(ry, &t.Args.YellowRobot); err != nil {
+	if err := parseCoordinate(ry, &a.YellowRobot); err != nil {
 		return nil, err
 	}
-	if err := parseCoordinate(rr, &t.Args.RedRobot); err != nil {
+	if err := parseCoordinate(rr, &a.RedRobot); err != nil {
 		return nil, err
 	}
-	if err := parseCoordinate(rg, &t.Args.GreenRobot); err != nil {
+	if err := parseCoordinate(rg, &a.GreenRobot); err != nil {
 		return nil, err
 	}
-	if err := parseCoordinate(rb, &t.Args.BlueRobot); err != nil {
+	if err := parseCoordinate(rb, &a.BlueRobot); err != nil {
 		return nil, err
 	}
-	if err := parseCoordinate(rs, &t.Args.SilverRobot); err != nil {
-		return nil, err
-	}
-
-	if err := parseSymbol(ts, &t.Args.TargetSymbol); err != nil {
+	if err := parseCoordinate(rs, &a.SilverRobot); err != nil {
 		return nil, err
 	}
 
-	if t.Args.TargetSymbol != Cosmic { // no color for symbol cosmic
-		if err := parseColor(tc, &t.Args.TargetColor); err != nil {
+	if err := parseSymbol(ts, &a.TargetSymbol); err != nil {
+		return nil, err
+	}
+
+	if a.TargetSymbol != Cosmic { // no color for symbol cosmic
+		if err := parseColor(tc, &a.TargetColor); err != nil {
 			return nil, err
 		}
 	}
 
-	if err := t.checkArgs(); err != nil {
+	var flag int
+	if noSymbolCheck {
+		flag += NoSymbolCheck
+	}
+
+	if err := a.Check(flag); err != nil {
 		return nil, err
 	}
-	return t, nil
+	return a, nil
 }
-
-// ParseFlags returns a task object build by command line flags.
-func ParseFlags() (*Task, error) { return parseFlags(os.Args[0], os.Args[1:], flag.ExitOnError) }
 
 /*
 func makeFlag(prm string) string { return "-" + prm }

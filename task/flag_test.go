@@ -32,7 +32,7 @@ func TestFlag(t *testing.T) {
 
 		for _, test := range tests {
 			t.Run(test.name, func(t *testing.T) {
-				if _, err := parseFlags(test.name, test.cmdArgs, flag.ContinueOnError); err != nil {
+				if _, err := parseArgs(test.name, test.cmdArgs, flag.ContinueOnError); err != nil {
 					t.Log(err)
 				} else {
 					t.Fatal("error expected")
@@ -101,13 +101,13 @@ func TestFlag(t *testing.T) {
 
 		for _, test := range tests {
 			t.Run(test.name, func(t *testing.T) {
-				task, err := parseFlags(test.name, test.cmdArgs, flag.ContinueOnError)
+				args, err := parseArgs(test.name, test.cmdArgs, flag.ContinueOnError)
 				if err != nil {
 					t.Fatal(err)
 				}
 				//if *task.Args != *test.args {
-				if !reflect.DeepEqual(task.Args, test.args) {
-					t.Fatalf("task %v - expected %v", task.Args, test.args)
+				if !reflect.DeepEqual(args, test.args) {
+					t.Fatalf("task %v - expected %v", args, test.args)
 				}
 			})
 		}
