@@ -44,10 +44,9 @@ const (
 
 // Task contains all game relevant data for a solver to calculate a game solution.
 type Task struct {
-	Args     *Args
-	logger   *slog.Logger
-	start    time.Time
-	progress int
+	Args   *Args
+	logger *slog.Logger
+	start  time.Time
 }
 
 // New returns a new task instance.
@@ -68,16 +67,9 @@ func NewByFlag() (*Task, error) {
 	return New(args), nil
 }
 
-// IncrProgress increments progress and signals the estimated task completion in percent.
-func (t *Task) IncrProgress(percent int) { t.SetProgress(t.progress + percent) }
-
-// SetProgress sets progress and signals the estimated task completion in percent.
-func (t *Task) SetProgress(percent int) {
-	t.progress = percent
-	if t.progress > 100 {
-		t.progress = 100
-	}
-	t.logger.Info("progress", "percent", percent)
+// Level logs the level and potential additional information provided by the solver.
+func (t *Task) Level(level int, args ...any) {
+	t.logger.Info("progress", append([]any{"level", level}, args...))
 }
 
 // Exit signals an error to the caller and exits the task process.
@@ -88,13 +80,7 @@ func (t *Task) Exit(err error) {
 
 // Result signals a task result to the caller.
 func (t *Task) Result(moves Moves, args ...any) {
-	logArgs := []any{
-		"duration",
-		time.Since(t.start) / time.Millisecond,
-		"moves",
-		moves,
-	}
-	t.logger.Info("result", "duration", append(logArgs, args...))
+	t.logger.Info("result", "duration", append([]any{"duration", time.Since(t.start) / time.Millisecond, "moves", moves}, args...))
 }
 
 // Move defines a single move of a robot.
