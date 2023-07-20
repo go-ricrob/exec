@@ -69,7 +69,7 @@ func NewByFlag() (*Task, error) {
 
 // Level logs the level and potential additional information provided by the solver.
 func (t *Task) Level(level int, args ...any) {
-	t.logger.Info("progress", append([]any{"level", level}, args...))
+	t.logger.Info("progress", append([]any{"level", level}, args...)...)
 }
 
 // Exit signals an error to the caller and exits the task process.
@@ -80,7 +80,7 @@ func (t *Task) Exit(err error) {
 
 // Result signals a task result to the caller.
 func (t *Task) Result(moves Moves, args ...any) {
-	t.logger.Info("result", "duration", append([]any{"duration", time.Since(t.start) / time.Millisecond, "moves", moves}, args...))
+	t.logger.Info("result", append([]any{"duration", time.Since(t.start) / time.Millisecond, "moves", moves}, args...)...)
 }
 
 // Move defines a single move of a robot.
