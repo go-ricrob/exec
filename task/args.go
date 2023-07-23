@@ -23,7 +23,6 @@ const (
 	prmSilverRobot = "rs"
 
 	prmTargetSymbol = "ts"
-	prmTargetColor  = "tc"
 
 	prmNoSymbolCheck = "s"
 )
@@ -41,7 +40,7 @@ var (
 	defBlueRobot   = "3,0"
 	defSilverRobot = "-1,-1"
 
-	defTargetSymbol = "Cosmic"
+	defTargetSymbol = "cosmic"
 
 	defNoSymbolCheck = false
 )
@@ -65,18 +64,27 @@ func parseCoordinate(s string, coord *Coordinate) error {
 }
 
 var symbolMap = map[string]Symbol{
-	"Pyramid": Pyramid,
-	"Star":    Star,
-	"Moon":    Moon,
-	"Saturn":  Saturn,
-	"Cosmic":  Cosmic,
-}
+	"yellowPyramid": YellowPyramid,
+	"yellowStar":    YellowStar,
+	"yellowMoon":    YellowMoon,
+	"yellowSaturn":  YellowSaturn,
 
-var targetColorMap = map[string]Color{
-	"yellow": Yellow,
-	"red":    Red,
-	"green":  Green,
-	"blue":   Blue,
+	"redPyramid": RedPyramid,
+	"redStar":    RedStar,
+	"redMoon":    RedMoon,
+	"redSaturn":  RedSaturn,
+
+	"greenPyramid": GreenPyramid,
+	"greenStar":    GreenStar,
+	"greenMoon":    GreenMoon,
+	"greenSaturn":  GreenSaturn,
+
+	"bluePyramid": BluePyramid,
+	"blueStar":    BlueStar,
+	"blueMoon":    BlueMoon,
+	"blueSaturn":  BlueSaturn,
+
+	"cosmic": Cosmic,
 }
 
 func parseSymbol(s string, ptr *Symbol) error {
@@ -85,15 +93,6 @@ func parseSymbol(s string, ptr *Symbol) error {
 		return fmt.Errorf("invalid symbol %s", s)
 	}
 	*ptr = symbol
-	return nil
-}
-
-func parseColor(s string, ptr *Color) error {
-	color, ok := targetColorMap[s]
-	if !ok {
-		return fmt.Errorf("invalid color %s", s)
-	}
-	*ptr = color
 	return nil
 }
 
@@ -116,7 +115,6 @@ type Args struct {
 	SilverRobot Coordinate
 
 	TargetSymbol Symbol
-	TargetColor  Color
 }
 
 // HasSilverRobot returns true if the silver robot is used, else otherwise.
@@ -137,7 +135,7 @@ func (a *Args) Check(flag int) error {
 		tileMap[tile] = true
 	}
 
-	b := board.New(map[board.TilePosition]string{
+	b := board.New([board.NumTile]string{
 		board.TopLeft:     a.TopLeftTile,
 		board.TopRight:    a.TopRightTile,
 		board.BottomLeft:  a.BottomLeftTile,
@@ -156,8 +154,8 @@ func (a *Args) Check(flag int) error {
 		}
 		if flag&NoSymbolCheck == 0 {
 			field := b.Field(robot.X, robot.Y)
-			if field.Symbol() != board.NoSymbol {
-				return fmt.Errorf("robot %v sits on symbol %s color %s", robot, field.Symbol(), field.Color())
+			if field.Symbol != board.NoSymbol {
+				return fmt.Errorf("robot %v sits on symbol %s color %s", robot, field.Symbol, field.Color)
 			}
 		}
 		if _, ok := robotMap[robot]; ok {
@@ -189,9 +187,8 @@ func parseArgs(name string, cmdArgs []string, errorHandling flag.ErrorHandling) 
 	fs.StringVar(&rb, prmBlueRobot, defBlueRobot, "blue robot position x,y")
 	fs.StringVar(&rs, prmSilverRobot, defSilverRobot, "silver robot position x,y")
 
-	var ts, tc string
-	fs.StringVar(&ts, prmTargetSymbol, defTargetSymbol, "target symbol (Pyramid|Star|Moon|Saturn|Cosmic)")
-	fs.StringVar(&tc, prmTargetColor, "", "target color (yellow|red|green|blue) - leave empty for symbol Cosmic")
+	var ts string
+	fs.StringVar(&ts, prmTargetSymbol, defTargetSymbol, "target symbol like yellowPyramid or cosmic")
 
 	fs.Parse(cmdArgs)
 
@@ -213,12 +210,6 @@ func parseArgs(name string, cmdArgs []string, errorHandling flag.ErrorHandling) 
 
 	if err := parseSymbol(ts, &a.TargetSymbol); err != nil {
 		return nil, err
-	}
-
-	if a.TargetSymbol != Cosmic { // no color for symbol cosmic
-		if err := parseColor(tc, &a.TargetColor); err != nil {
-			return nil, err
-		}
 	}
 
 	var flag int

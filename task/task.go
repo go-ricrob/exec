@@ -20,26 +20,39 @@ type Symbol byte
 
 // Symbol constants.
 const (
-	_ Symbol = iota // no symbol
-	Pyramid
-	Star
-	Moon
-	Saturn
+	YellowPyramid Symbol = iota
+	YellowStar
+	YellowMoon
+	YellowSaturn
+
+	RedPyramid
+	RedStar
+	RedMoon
+	RedSaturn
+
+	GreenPyramid
+	GreenStar
+	GreenMoon
+	GreenSaturn
+
+	BluePyramid
+	BlueStar
+	BlueMoon
+	BlueSaturn
+
 	Cosmic
 )
 
-// Color is the type of a color.
-type Color byte
+// Robot is the type of a robot.
+type Robot byte
 
-// Color constants
+// Robot constants
 const (
-	_ Color = iota // no color
-	Yellow
-	Red
-	Green
-	Blue
-	Silver
-	CosmicColor
+	YellowRobot Robot = iota
+	RedRobot
+	GreenRobot
+	BlueRobot
+	SilverRobot
 )
 
 // Task contains all game relevant data for a solver to calculate a game solution.
@@ -86,7 +99,7 @@ func (t *Task) Result(moves Moves, args ...any) {
 // Move defines a single move of a robot.
 type Move struct {
 	To    Coordinate
-	Color Color
+	Robot Robot
 }
 
 // Moves describes a solution of a game as ordered list of robot moves.

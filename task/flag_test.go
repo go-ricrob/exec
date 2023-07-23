@@ -65,7 +65,7 @@ func TestFlag(t *testing.T) {
 			},
 			{
 				"check board without silver robot",
-				[]string{"-ry", "0,0", "-rr", "0,1", "-rg", "0,2", "-rb", "0,3", "-ts", "Star", "-tc", "yellow"},
+				[]string{"-ry", "0,0", "-rr", "0,1", "-rg", "0,2", "-rb", "0,3", "-ts", "yellowStar"},
 				&Args{
 					TopLeftTile:     defTopLeftTile,
 					TopRightTile:    defTopRightTile,
@@ -76,13 +76,12 @@ func TestFlag(t *testing.T) {
 					GreenRobot:      Coordinate{X: 0, Y: 2},
 					BlueRobot:       Coordinate{X: 0, Y: 3},
 					SilverRobot:     Coordinate{X: -1, Y: -1},
-					TargetSymbol:    Star,
-					TargetColor:     Yellow,
+					TargetSymbol:    YellowStar,
 				},
 			},
 			{
 				"check board with silver robot",
-				[]string{"-ry", "0,0", "-rr", "0,1", "-rg", "0,2", "-rb", "0,3", "-rs", "0,4", "-ts", "Star", "-tc", "yellow"},
+				[]string{"-ry", "0,0", "-rr", "0,1", "-rg", "0,2", "-rb", "0,3", "-rs", "0,4", "-ts", "yellowStar"},
 				&Args{
 					TopLeftTile:     defTopLeftTile,
 					TopRightTile:    defTopRightTile,
@@ -93,8 +92,7 @@ func TestFlag(t *testing.T) {
 					GreenRobot:      Coordinate{X: 0, Y: 2},
 					BlueRobot:       Coordinate{X: 0, Y: 3},
 					SilverRobot:     Coordinate{X: 0, Y: 4},
-					TargetSymbol:    Star,
-					TargetColor:     Yellow,
+					TargetSymbol:    YellowStar,
 				},
 			},
 		}
