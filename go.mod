@@ -3,8 +3,8 @@ module github.com/go-ricrob/exec
 go 1.20
 
 require (
-	github.com/go-ricrob/game v0.0.3
-	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
+	github.com/go-ricrob/game v0.0.6
+	golang.org/x/exp v0.0.0-20230725093048-515e97ebf090
 )
 
 //replace (

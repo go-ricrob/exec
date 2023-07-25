@@ -3,6 +3,7 @@ package task
 
 import (
 	"flag"
+	"fmt"
 	"net/url"
 	"os"
 	"time"
@@ -44,6 +45,81 @@ const (
 	Cosmic
 )
 
+const (
+	strYellowPyramid = "yellowPyramid"
+	strYellowStar    = "yellowStar"
+	strYellowMoon    = "yellowMoon"
+	strYellowSaturn  = "yellowSaturn"
+
+	strRedPyramid = "redPyramid"
+	strRedStar    = "redStar"
+	strRedMoon    = "redMoon"
+	strRedSaturn  = "redSaturn"
+
+	strGreenPyramid = "greenPyramid"
+	strGreenStar    = "greenStar"
+	strGreenMoon    = "greenMoon"
+	strGreenSaturn  = "greenSaturn"
+
+	strBluePyramid = "bluePyramid"
+	strBlueStar    = "blueStar"
+	strBlueMoon    = "blueMoon"
+	strBlueSaturn  = "blueSaturn"
+
+	strCosmic = "cosmic"
+)
+
+var symbolStrs = []string{
+	strYellowPyramid,
+	strYellowStar,
+	strYellowMoon,
+	strYellowSaturn,
+	strRedPyramid,
+	strRedStar,
+	strRedMoon,
+	strRedSaturn,
+	strGreenPyramid,
+	strGreenStar,
+	strGreenMoon,
+	strGreenSaturn,
+	strBluePyramid,
+	strBlueStar,
+	strBlueMoon,
+	strBlueSaturn,
+	strCosmic,
+}
+
+var symbolMap = map[string]Symbol{
+	strYellowPyramid: YellowPyramid,
+	strYellowStar:    YellowStar,
+	strYellowMoon:    YellowMoon,
+	strYellowSaturn:  YellowSaturn,
+
+	strRedPyramid: RedPyramid,
+	strRedStar:    RedStar,
+	strRedMoon:    RedMoon,
+	strRedSaturn:  RedSaturn,
+
+	strGreenPyramid: GreenPyramid,
+	strGreenStar:    GreenStar,
+	strGreenMoon:    GreenMoon,
+	strGreenSaturn:  GreenSaturn,
+
+	strBluePyramid: BluePyramid,
+	strBlueStar:    BlueStar,
+	strBlueMoon:    BlueMoon,
+	strBlueSaturn:  BlueSaturn,
+
+	strCosmic: Cosmic,
+}
+
+func (s Symbol) String() string {
+	if int(s) >= len(symbolStrs) {
+		panic(fmt.Sprintf("invalid symbol %d", s))
+	}
+	return symbolStrs[s]
+}
+
 // Robot is the type of a robot.
 type Robot byte
 
@@ -74,14 +150,19 @@ func New(args *Args) *Task {
 
 // NewByFlag returns a new task instance with arguments parsed from flags.
 func NewByFlag() (*Task, error) {
-	args, err := parseArgs(os.Args[0], os.Args[1:], flag.ExitOnError)
+	args, err := parseFlag(os.Args[0], os.Args[1:], flag.ExitOnError)
 	if err != nil {
 		return nil, err
 	}
 	return New(args), nil
 }
 
-func NewByUrl() (*url.URL, error) {
+// NewByURL returns a new task instance with arguments parsed from an url.
+func NewByURL(u *url.URL) (*Task, error) {
+	args, err := parseURL(u)
+	if err != nil {
+		return nil, err
+	}
 	return New(args), nil
 }
 

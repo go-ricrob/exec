@@ -32,7 +32,7 @@ func TestFlag(t *testing.T) {
 
 		for _, test := range tests {
 			t.Run(test.name, func(t *testing.T) {
-				if _, err := parseArgs(test.name, test.cmdArgs, flag.ContinueOnError); err != nil {
+				if _, err := parseFlag(test.name, test.cmdArgs, flag.ContinueOnError); err != nil {
 					t.Log(err)
 				} else {
 					t.Fatal("error expected")
@@ -51,55 +51,58 @@ func TestFlag(t *testing.T) {
 				"default",
 				[]string{},
 				&Args{
-					TopLeftTile:     defTopLeftTile,
-					TopRightTile:    defTopRightTile,
-					BottomLeftTile:  defBottomLeftTile,
-					BottomRightTile: defBottomRightTile,
-					YellowRobot:     Coordinate{X: 0, Y: 0},
-					RedRobot:        Coordinate{X: 1, Y: 0},
-					GreenRobot:      Coordinate{X: 2, Y: 0},
-					BlueRobot:       Coordinate{X: 3, Y: 0},
-					SilverRobot:     Coordinate{X: -1, Y: -1},
-					TargetSymbol:    Cosmic,
+					TopLeftTile:        defTopLeftTile,
+					TopRightTile:       defTopRightTile,
+					BottomLeftTile:     defBottomLeftTile,
+					BottomRightTile:    defBottomRightTile,
+					YellowRobot:        Coordinate{X: 0, Y: 0},
+					RedRobot:           Coordinate{X: 1, Y: 0},
+					GreenRobot:         Coordinate{X: 2, Y: 0},
+					BlueRobot:          Coordinate{X: 3, Y: 0},
+					SilverRobot:        Coordinate{X: -1, Y: -1},
+					TargetSymbol:       Cosmic,
+					CheckRobotOnSymbol: true,
 				},
 			},
 			{
 				"check board without silver robot",
 				[]string{"-ry", "0,0", "-rr", "0,1", "-rg", "0,2", "-rb", "0,3", "-ts", "yellowStar"},
 				&Args{
-					TopLeftTile:     defTopLeftTile,
-					TopRightTile:    defTopRightTile,
-					BottomLeftTile:  defBottomLeftTile,
-					BottomRightTile: defBottomRightTile,
-					YellowRobot:     Coordinate{X: 0, Y: 0},
-					RedRobot:        Coordinate{X: 0, Y: 1},
-					GreenRobot:      Coordinate{X: 0, Y: 2},
-					BlueRobot:       Coordinate{X: 0, Y: 3},
-					SilverRobot:     Coordinate{X: -1, Y: -1},
-					TargetSymbol:    YellowStar,
+					TopLeftTile:        defTopLeftTile,
+					TopRightTile:       defTopRightTile,
+					BottomLeftTile:     defBottomLeftTile,
+					BottomRightTile:    defBottomRightTile,
+					YellowRobot:        Coordinate{X: 0, Y: 0},
+					RedRobot:           Coordinate{X: 0, Y: 1},
+					GreenRobot:         Coordinate{X: 0, Y: 2},
+					BlueRobot:          Coordinate{X: 0, Y: 3},
+					SilverRobot:        Coordinate{X: -1, Y: -1},
+					TargetSymbol:       YellowStar,
+					CheckRobotOnSymbol: true,
 				},
 			},
 			{
 				"check board with silver robot",
 				[]string{"-ry", "0,0", "-rr", "0,1", "-rg", "0,2", "-rb", "0,3", "-rs", "0,4", "-ts", "yellowStar"},
 				&Args{
-					TopLeftTile:     defTopLeftTile,
-					TopRightTile:    defTopRightTile,
-					BottomLeftTile:  defBottomLeftTile,
-					BottomRightTile: defBottomRightTile,
-					YellowRobot:     Coordinate{X: 0, Y: 0},
-					RedRobot:        Coordinate{X: 0, Y: 1},
-					GreenRobot:      Coordinate{X: 0, Y: 2},
-					BlueRobot:       Coordinate{X: 0, Y: 3},
-					SilverRobot:     Coordinate{X: 0, Y: 4},
-					TargetSymbol:    YellowStar,
+					TopLeftTile:        defTopLeftTile,
+					TopRightTile:       defTopRightTile,
+					BottomLeftTile:     defBottomLeftTile,
+					BottomRightTile:    defBottomRightTile,
+					YellowRobot:        Coordinate{X: 0, Y: 0},
+					RedRobot:           Coordinate{X: 0, Y: 1},
+					GreenRobot:         Coordinate{X: 0, Y: 2},
+					BlueRobot:          Coordinate{X: 0, Y: 3},
+					SilverRobot:        Coordinate{X: 0, Y: 4},
+					TargetSymbol:       YellowStar,
+					CheckRobotOnSymbol: true,
 				},
 			},
 		}
 
 		for _, test := range tests {
 			t.Run(test.name, func(t *testing.T) {
-				args, err := parseArgs(test.name, test.cmdArgs, flag.ContinueOnError)
+				args, err := parseFlag(test.name, test.cmdArgs, flag.ContinueOnError)
 				if err != nil {
 					t.Fatal(err)
 				}

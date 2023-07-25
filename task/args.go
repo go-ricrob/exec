@@ -3,6 +3,7 @@ package task
 import (
 	"flag"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -24,7 +25,7 @@ const (
 
 	prmTargetSymbol = "ts"
 
-	prmNoSymbolCheck = "s"
+	prmCheckRobotOnSymbol = "crs"
 )
 
 // Default parameters.
@@ -42,7 +43,7 @@ var (
 
 	defTargetSymbol = "cosmic"
 
-	defNoSymbolCheck = false
+	defCheckRobotOnSymbol = true
 )
 
 func parseCoordinate(s string, coord *Coordinate) error {
@@ -63,30 +64,6 @@ func parseCoordinate(s string, coord *Coordinate) error {
 	return nil
 }
 
-var symbolMap = map[string]Symbol{
-	"yellowPyramid": YellowPyramid,
-	"yellowStar":    YellowStar,
-	"yellowMoon":    YellowMoon,
-	"yellowSaturn":  YellowSaturn,
-
-	"redPyramid": RedPyramid,
-	"redStar":    RedStar,
-	"redMoon":    RedMoon,
-	"redSaturn":  RedSaturn,
-
-	"greenPyramid": GreenPyramid,
-	"greenStar":    GreenStar,
-	"greenMoon":    GreenMoon,
-	"greenSaturn":  GreenSaturn,
-
-	"bluePyramid": BluePyramid,
-	"blueStar":    BlueStar,
-	"blueMoon":    BlueMoon,
-	"blueSaturn":  BlueSaturn,
-
-	"cosmic": Cosmic,
-}
-
 func parseSymbol(s string, ptr *Symbol) error {
 	symbol, ok := symbolMap[s]
 	if !ok {
@@ -95,11 +72,6 @@ func parseSymbol(s string, ptr *Symbol) error {
 	*ptr = symbol
 	return nil
 }
-
-// Check flags for arguments
-const (
-	NoSymbolCheck = 1 << iota
-)
 
 // Args holds the task arguments.
 type Args struct {
@@ -115,13 +87,35 @@ type Args struct {
 	SilverRobot Coordinate
 
 	TargetSymbol Symbol
+
+	CheckRobotOnSymbol bool
 }
 
 // HasSilverRobot returns true if the silver robot is used, else otherwise.
 func (a *Args) HasSilverRobot() bool { return a.SilverRobot.X != -1 && a.SilverRobot.Y != -1 }
 
+// CmdArgs returns an argument slice build by task parameters.
+func (a *Args) CmdArgs() []string {
+	return []string{
+		fmt.Sprintf("-%s %s", prmTopLeftTile, a.TopLeftTile),
+		fmt.Sprintf("-%s %s", prmTopRightTile, a.TopRightTile),
+		fmt.Sprintf("-%s %s", prmBottomRightTile, a.BottomRightTile),
+		fmt.Sprintf("-%s %s", prmBottomLeftTile, a.BottomLeftTile),
+
+		fmt.Sprintf("-%s %d,%d", prmYellowRobot, a.YellowRobot.X, a.YellowRobot.Y),
+		fmt.Sprintf("-%s %d,%d", prmRedRobot, a.RedRobot.X, a.RedRobot.Y),
+		fmt.Sprintf("-%s %d,%d", prmGreenRobot, a.GreenRobot.X, a.GreenRobot.Y),
+		fmt.Sprintf("-%s %d,%d", prmBlueRobot, a.BlueRobot.X, a.BlueRobot.Y),
+		fmt.Sprintf("-%s %d,%d", prmSilverRobot, a.SilverRobot.X, a.SilverRobot.Y),
+
+		fmt.Sprintf("-%s %s", prmTargetSymbol, a.TargetSymbol),
+
+		fmt.Sprintf("-%s %t", prmCheckRobotOnSymbol, a.CheckRobotOnSymbol),
+	}
+}
+
 // Check checks validity and consistency of arguments.
-func (a *Args) Check(flag int) error {
+func (a *Args) Check() error {
 	// check tiles
 	tiles := []string{a.TopLeftTile, a.TopRightTile, a.BottomLeftTile, a.BottomRightTile}
 	tileMap := map[string]bool{}
@@ -152,7 +146,7 @@ func (a *Args) Check(flag int) error {
 		if !b.IsValidCoordinate(robot.X, robot.Y) {
 			return fmt.Errorf("invalid robot coordinates %v - center field", robot)
 		}
-		if flag&NoSymbolCheck == 0 {
+		if a.CheckRobotOnSymbol {
 			field := b.Field(robot.X, robot.Y)
 			if field.Symbol != board.NoSymbol {
 				return fmt.Errorf("robot %v sits on symbol %s color %s", robot, field.Symbol, field.Color)
@@ -166,13 +160,10 @@ func (a *Args) Check(flag int) error {
 	return nil
 }
 
-func parseArgs(name string, cmdArgs []string, errorHandling flag.ErrorHandling) (*Args, error) {
+func parseFlag(name string, cmdArgs []string, errorHandling flag.ErrorHandling) (*Args, error) {
 	a := new(Args)
 
 	fs := flag.NewFlagSet(name, errorHandling)
-
-	var noSymbolCheck bool
-	fs.BoolVar(&noSymbolCheck, prmNoSymbolCheck, defNoSymbolCheck, "do not check if robots sit on symbol")
 
 	fs.StringVar(&a.TopLeftTile, prmTopLeftTile, defTopLeftTile, "top left tile")
 	fs.StringVar(&a.TopRightTile, prmTopRightTile, defTopRightTile, "top right tile")
@@ -189,6 +180,8 @@ func parseArgs(name string, cmdArgs []string, errorHandling flag.ErrorHandling) 
 
 	var ts string
 	fs.StringVar(&ts, prmTargetSymbol, defTargetSymbol, "target symbol like yellowPyramid or cosmic")
+
+	fs.BoolVar(&a.CheckRobotOnSymbol, prmCheckRobotOnSymbol, defCheckRobotOnSymbol, "check if robots sit on symbol")
 
 	fs.Parse(cmdArgs)
 
@@ -212,37 +205,77 @@ func parseArgs(name string, cmdArgs []string, errorHandling flag.ErrorHandling) 
 		return nil, err
 	}
 
-	var flag int
-	if noSymbolCheck {
-		flag += NoSymbolCheck
-	}
-
-	if err := a.Check(flag); err != nil {
+	if err := a.Check(); err != nil {
 		return nil, err
 	}
 	return a, nil
 }
 
-// Args returns an argument slice build by task parameters.
-func (a *Args) CmdArgs() []string {
-	return []string{
-		fmt.Sprintf("-%s %s", prmTopLeftTile, a.TopLeftTile),
-		fmt.Sprintf("-%s %s", prmTopRightTile, a.TopRightTile),
-		fmt.Sprintf("-%s %s", prmBottomRightTile, a.BottomRightTile),
-		fmt.Sprintf("-%s %s", prmBottomLeftTile, a.BottomLeftTile),
+type querySet struct {
+	values url.Values
+}
 
-		fmt.Sprintf("-%s %d,%d", prmYellowRobot, a.YellowRobot.X, a.YellowRobot.Y),
-		fmt.Sprintf("-%s %d,%d", prmRedRobot, a.RedRobot.X, a.RedRobot.Y),
-		fmt.Sprintf("-%s %d,%d", prmGreenRobot, a.GreenRobot.X, a.GreenRobot.Y),
-		fmt.Sprintf("-%s %d,%d", prmBlueRobot, a.BlueRobot.X, a.BlueRobot.Y),
-		fmt.Sprintf("-%s %d,%d", prmSilverRobot, a.SilverRobot.X, a.SilverRobot.Y),
+func newQuerySet(u *url.URL) *querySet { return &querySet{values: u.Query()} }
 
-		fmt.Sprintf("-%s %s", prmTargetSymbol, a.TargetSymbol),
+func (qs *querySet) string(name string, value string) string {
+	if v, ok := qs.values[name]; ok {
+		return v[0]
+	}
+	return value
+}
 
-		" ",
+func (qs *querySet) bool(name string, value bool) bool {
+	if v, ok := qs.values[name]; ok {
+		if b, err := strconv.ParseBool(v[0]); err == nil {
+			return b
+		}
+	}
+	return value
+}
+
+func parseURL(u *url.URL) (*Args, error) {
+	a := new(Args)
+
+	qs := newQuerySet(u)
+
+	a.TopLeftTile = qs.string(prmTopLeftTile, defTopLeftTile)
+	a.TopRightTile = qs.string(prmTopRightTile, defTopRightTile)
+	a.BottomLeftTile = qs.string(prmBottomLeftTile, defBottomLeftTile)
+	a.BottomRightTile = qs.string(prmBottomRightTile, defBottomRightTile)
+
+	ry := qs.string(prmYellowRobot, defYellowRobot)
+	rr := qs.string(prmRedRobot, defRedRobot)
+	rg := qs.string(prmGreenRobot, defGreenRobot)
+	rb := qs.string(prmBlueRobot, defBlueRobot)
+	rs := qs.string(prmSilverRobot, defSilverRobot)
+
+	ts := qs.string(prmTargetSymbol, defTargetSymbol)
+
+	a.CheckRobotOnSymbol = qs.bool(prmCheckRobotOnSymbol, defCheckRobotOnSymbol)
+
+	if err := parseCoordinate(ry, &a.YellowRobot); err != nil {
+		return nil, err
+	}
+	if err := parseCoordinate(rr, &a.RedRobot); err != nil {
+		return nil, err
+	}
+	if err := parseCoordinate(rg, &a.GreenRobot); err != nil {
+		return nil, err
+	}
+	if err := parseCoordinate(rb, &a.BlueRobot); err != nil {
+		return nil, err
+	}
+	if err := parseCoordinate(rs, &a.SilverRobot); err != nil {
+		return nil, err
 	}
 
-	/*
-	   prmNoSymbolCheck = "s"
-	*/
+	if err := parseSymbol(ts, &a.TargetSymbol); err != nil {
+		return nil, err
+	}
+
+	if err := a.Check(); err != nil {
+		return nil, err
+	}
+
+	return a, nil
 }
