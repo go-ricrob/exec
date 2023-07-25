@@ -223,26 +223,26 @@ func parseArgs(name string, cmdArgs []string, errorHandling flag.ErrorHandling) 
 	return a, nil
 }
 
-/*
-func makeFlag(prm string) string { return "-" + prm }
-
 // Args returns an argument slice build by task parameters.
-func Args(t *task.Task) []string {
-	tiles := t.Tiles()
-	robots := t.Robots()
+func (a *Args) CmdArgs() []string {
 	return []string{
-		makeFlag(game.TopLeftTilePrm), tiles[game.TopLeft].String(),
-		makeFlag(game.TopRightTilePrm), tiles[game.TopRight].String(),
-		makeFlag(game.BottomRightTilePrm), tiles[game.BottomRight].String(),
-		makeFlag(game.BottomLeftTilePrm), tiles[game.BottomLeft].String(),
+		fmt.Sprintf("-%s %s", prmTopLeftTile, a.TopLeftTile),
+		fmt.Sprintf("-%s %s", prmTopRightTile, a.TopRightTile),
+		fmt.Sprintf("-%s %s", prmBottomRightTile, a.BottomRightTile),
+		fmt.Sprintf("-%s %s", prmBottomLeftTile, a.BottomLeftTile),
 
-		makeFlag(game.YellowRobotPrm), robots[game.Yellow].String(),
-		makeFlag(game.RedRobotPrm), robots[game.Red].String(),
-		makeFlag(game.GreenRobotPrm), robots[game.Green].String(),
-		makeFlag(game.BlueRobotPrm), robots[game.Blue].String(),
-		makeFlag(game.SilverRobotPrm), robots[game.Silver].String(),
+		fmt.Sprintf("-%s %d,%d", prmYellowRobot, a.YellowRobot.X, a.YellowRobot.Y),
+		fmt.Sprintf("-%s %d,%d", prmRedRobot, a.RedRobot.X, a.RedRobot.Y),
+		fmt.Sprintf("-%s %d,%d", prmGreenRobot, a.GreenRobot.X, a.GreenRobot.Y),
+		fmt.Sprintf("-%s %d,%d", prmBlueRobot, a.BlueRobot.X, a.BlueRobot.Y),
+		fmt.Sprintf("-%s %d,%d", prmSilverRobot, a.SilverRobot.X, a.SilverRobot.Y),
 
-		makeFlag(game.TargetPrm), t.Target().String(),
+		fmt.Sprintf("-%s %s", prmTargetSymbol, a.TargetSymbol),
+
+		" ",
 	}
+
+	/*
+	   prmNoSymbolCheck = "s"
+	*/
 }
-*/

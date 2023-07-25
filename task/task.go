@@ -3,6 +3,7 @@ package task
 
 import (
 	"flag"
+	"net/url"
 	"os"
 	"time"
 
@@ -77,6 +78,10 @@ func NewByFlag() (*Task, error) {
 	if err != nil {
 		return nil, err
 	}
+	return New(args), nil
+}
+
+func NewByUrl() (*url.URL, error) {
 	return New(args), nil
 }
 
