@@ -243,35 +243,27 @@ func parseURL(u *url.URL) (*Args, error) {
 	a.BottomLeftTile = qs.string(prmBottomLeftTile, defBottomLeftTile)
 	a.BottomRightTile = qs.string(prmBottomRightTile, defBottomRightTile)
 
-	ry := qs.string(prmYellowRobot, defYellowRobot)
-	rr := qs.string(prmRedRobot, defRedRobot)
-	rg := qs.string(prmGreenRobot, defGreenRobot)
-	rb := qs.string(prmBlueRobot, defBlueRobot)
-	rs := qs.string(prmSilverRobot, defSilverRobot)
+	if err := parseCoordinate(qs.string(prmYellowRobot, defYellowRobot), &a.YellowRobot); err != nil {
+		return nil, err
+	}
+	if err := parseCoordinate(qs.string(prmRedRobot, defRedRobot), &a.RedRobot); err != nil {
+		return nil, err
+	}
+	if err := parseCoordinate(qs.string(prmGreenRobot, defGreenRobot), &a.GreenRobot); err != nil {
+		return nil, err
+	}
+	if err := parseCoordinate(qs.string(prmBlueRobot, defBlueRobot), &a.BlueRobot); err != nil {
+		return nil, err
+	}
+	if err := parseCoordinate(qs.string(prmSilverRobot, defSilverRobot), &a.SilverRobot); err != nil {
+		return nil, err
+	}
 
-	ts := qs.string(prmTargetSymbol, defTargetSymbol)
+	if err := parseSymbol(qs.string(prmTargetSymbol, defTargetSymbol), &a.TargetSymbol); err != nil {
+		return nil, err
+	}
 
 	a.CheckRobotOnSymbol = qs.bool(prmCheckRobotOnSymbol, defCheckRobotOnSymbol)
-
-	if err := parseCoordinate(ry, &a.YellowRobot); err != nil {
-		return nil, err
-	}
-	if err := parseCoordinate(rr, &a.RedRobot); err != nil {
-		return nil, err
-	}
-	if err := parseCoordinate(rg, &a.GreenRobot); err != nil {
-		return nil, err
-	}
-	if err := parseCoordinate(rb, &a.BlueRobot); err != nil {
-		return nil, err
-	}
-	if err := parseCoordinate(rs, &a.SilverRobot); err != nil {
-		return nil, err
-	}
-
-	if err := parseSymbol(ts, &a.TargetSymbol); err != nil {
-		return nil, err
-	}
 
 	if err := a.Check(); err != nil {
 		return nil, err
