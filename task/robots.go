@@ -17,6 +17,14 @@ const (
 	fnSilverRobot = "rs"
 )
 
+const (
+	argYellowRobot = "-" + fnYellowRobot
+	argRedRobot    = "-" + fnRedRobot
+	argGreenRobot  = "-" + fnGreenRobot
+	argBlueRobot   = "-" + fnBlueRobot
+	argSilverRobot = "-" + fnSilverRobot
+)
+
 // Default parameters.
 var (
 	defYellowRobot = Coordinate{X: 0, Y: 0}

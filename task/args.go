@@ -14,6 +14,11 @@ const (
 	fnCheckRobotOnSymbol = "crs"
 )
 
+const (
+	argTargetSymbol       = "-" + fnTargetSymbol
+	argCheckRobotOnSymbol = "-" + fnCheckRobotOnSymbol
+)
+
 // Default parameters.
 var (
 	defTargetSymbol       = Cosmic
@@ -31,22 +36,24 @@ type Args struct {
 
 // CmdArgs returns an argument slice build by task parameters.
 func (a *Args) CmdArgs() []string {
-	return []string{
-		fmt.Sprintf("-%s %s", fnTopLeftTile, a.Tiles.TopLeft),
-		fmt.Sprintf("-%s %s", fnTopRightTile, a.Tiles.TopRight),
-		fmt.Sprintf("-%s %s", fnBottomRightTile, a.Tiles.BottomRight),
-		fmt.Sprintf("-%s %s", fnBottomLeftTile, a.Tiles.BottomLeft),
+	s := []string{
+		argTopLeftTile, a.Tiles.TopLeft,
+		argTopRightTile, a.Tiles.TopRight,
+		argBottomRightTile, a.Tiles.BottomRight,
+		argBottomLeftTile, a.Tiles.BottomLeft,
 
-		fmt.Sprintf("-%s %d,%d", fnYellowRobot, a.Robots.Yellow.X, a.Robots.Yellow.Y),
-		fmt.Sprintf("-%s %d,%d", fnRedRobot, a.Robots.Red.X, a.Robots.Red.Y),
-		fmt.Sprintf("-%s %d,%d", fnGreenRobot, a.Robots.Green.X, a.Robots.Green.Y),
-		fmt.Sprintf("-%s %d,%d", fnBlueRobot, a.Robots.Blue.X, a.Robots.Blue.Y),
-		fmt.Sprintf("-%s %d,%d", fnSilverRobot, a.Robots.Silver.X, a.Robots.Silver.Y),
+		argYellowRobot, a.Robots.Yellow.String(),
+		argRedRobot, a.Robots.Red.String(),
+		argGreenRobot, a.Robots.Green.String(),
+		argBlueRobot, a.Robots.Blue.String(),
+		argSilverRobot, a.Robots.Silver.String(),
 
-		fmt.Sprintf("-%s %s", fnTargetSymbol, a.TargetSymbol),
-
-		fmt.Sprintf("-%s %t", fnCheckRobotOnSymbol, a.CheckRobotOnSymbol),
+		argTargetSymbol, a.TargetSymbol.String(),
 	}
+	if a.CheckRobotOnSymbol {
+		s = append(s, argCheckRobotOnSymbol)
+	}
+	return s
 }
 
 func parseSymbol(s string) (Symbol, error) {
@@ -131,7 +138,8 @@ func queryBool(values url.Values, name string, value bool) (bool, error) {
 	return value, nil
 }
 
-func parseURL(u *url.URL) (*Args, error) {
+// ParseURL parses and returns arguments base on an URL query.
+func ParseURL(u *url.URL) (*Args, error) {
 	a := new(Args)
 
 	query := u.Query()

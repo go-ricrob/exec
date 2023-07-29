@@ -14,6 +14,13 @@ const (
 	fnBottomLeftTile  = "tbl"
 )
 
+const (
+	argTopLeftTile     = "-" + fnTopLeftTile
+	argTopRightTile    = "-" + fnTopRightTile
+	argBottomRightTile = "-" + fnBottomRightTile
+	argBottomLeftTile  = "-" + fnBottomLeftTile
+)
+
 // Default parameters.
 var (
 	defTopLeftTile     = "A1F"
