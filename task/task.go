@@ -133,6 +133,15 @@ const (
 	SilverRobot
 )
 
+var robotStrs = []string{"yellowRobot", "redRobot", "greenRobot", "blueRobot", "silverRobot"}
+
+func (r Robot) String() string {
+	if int(r) >= len(robotStrs) {
+		panic(fmt.Sprintf("invalid robot %d", r))
+	}
+	return robotStrs[r]
+}
+
 // Task contains all game relevant data for a solver to calculate a game solution.
 type Task struct {
 	Args   *Args
@@ -150,8 +159,8 @@ func New(args *Args) *Task {
 	}
 }
 
-// NewFlag returns a new task instance with arguments parsed from flag.
-func NewFlag() (*Task, error) {
+// NewFromFlag returns a new task instance with arguments parsed from flag.
+func NewFromFlag() (*Task, error) {
 	args, err := parseFlag(os.Args[0], os.Args[1:], flag.ExitOnError)
 	if err != nil {
 		return nil, err

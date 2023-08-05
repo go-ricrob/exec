@@ -51,13 +51,13 @@ func TestFlag(t *testing.T) {
 				"default",
 				[]string{},
 				&Args{
-					Tiles: Tiles{
+					Tiles: &Tiles{
 						TopLeft:     defTopLeftTile,
 						TopRight:    defTopRightTile,
 						BottomLeft:  defBottomLeftTile,
 						BottomRight: defBottomRightTile,
 					},
-					Robots: Robots{
+					Robots: &Robots{
 						Yellow: Coordinate{X: 0, Y: 0},
 						Red:    Coordinate{X: 1, Y: 0},
 						Green:  Coordinate{X: 2, Y: 0},
@@ -72,13 +72,13 @@ func TestFlag(t *testing.T) {
 				"check board without silver robot",
 				[]string{"-ry", "0,0", "-rr", "0,1", "-rg", "0,2", "-rb", "0,3", "-ts", "yellowStar"},
 				&Args{
-					Tiles: Tiles{
+					Tiles: &Tiles{
 						TopLeft:     defTopLeftTile,
 						TopRight:    defTopRightTile,
 						BottomLeft:  defBottomLeftTile,
 						BottomRight: defBottomRightTile,
 					},
-					Robots: Robots{
+					Robots: &Robots{
 						Yellow: Coordinate{X: 0, Y: 0},
 						Red:    Coordinate{X: 0, Y: 1},
 						Green:  Coordinate{X: 0, Y: 2},
@@ -93,13 +93,13 @@ func TestFlag(t *testing.T) {
 				"check board with silver robot",
 				[]string{"-ry", "0,0", "-rr", "0,1", "-rg", "0,2", "-rb", "0,3", "-rs", "0,4", "-ts", "yellowStar"},
 				&Args{
-					Tiles: Tiles{
+					Tiles: &Tiles{
 						TopLeft:     defTopLeftTile,
 						TopRight:    defTopRightTile,
 						BottomLeft:  defBottomLeftTile,
 						BottomRight: defBottomRightTile,
 					},
-					Robots: Robots{
+					Robots: &Robots{
 						Yellow: Coordinate{X: 0, Y: 0},
 						Red:    Coordinate{X: 0, Y: 1},
 						Green:  Coordinate{X: 0, Y: 2},

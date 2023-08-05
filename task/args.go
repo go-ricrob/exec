@@ -4,22 +4,60 @@ import (
 	"flag"
 	"fmt"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 )
 
-// Parameter name constants.
+const envPrefix = "RICROB_" // environment prefix.
+
+func envVar(name string) string { return envPrefix + strings.ToUpper(name) }
+
+func argVar(name string) string { return "-" + name }
+
+func envString(name, def string) string {
+	if value, ok := os.LookupEnv(envVar(name)); ok {
+		return value
+	}
+	return def
+}
+
+func envBool(name string, def bool) bool {
+	if strValue, ok := os.LookupEnv(envVar(name)); ok {
+		if value, err := strconv.ParseBool(strValue); err == nil {
+			return value
+		}
+	}
+	return def
+}
+
+func envCoord(name string, def Coordinate) Coordinate {
+	if strValue, ok := os.LookupEnv(envVar(name)); ok {
+		if value, err := parseCoordinate(strValue); err == nil {
+			return value
+		}
+	}
+	return def
+}
+
+func envSymbol(name string, def Symbol) Symbol {
+	if strValue, ok := os.LookupEnv(envVar(name)); ok {
+		if value, err := parseSymbol(strValue); err == nil {
+			return value
+		}
+	}
+	return def
+}
+
+func usage(key, text string) string {
+	return fmt.Sprintf("%s (environment variable %s)", text, envVar(key))
+}
+
 const (
 	fnTargetSymbol       = "ts"
 	fnCheckRobotOnSymbol = "crs"
 )
 
-const (
-	argTargetSymbol       = "-" + fnTargetSymbol
-	argCheckRobotOnSymbol = "-" + fnCheckRobotOnSymbol
-)
-
-// Default parameters.
 var (
 	defTargetSymbol       = Cosmic
 	defCheckRobotOnSymbol = true
@@ -27,31 +65,35 @@ var (
 
 // Args holds the task arguments.
 type Args struct {
-	Tiles        Tiles
-	Robots       Robots
+	Tiles        *Tiles
+	Robots       *Robots
 	TargetSymbol Symbol
 
 	CheckRobotOnSymbol bool
 }
 
+func newArgs() *Args {
+	return &Args{Tiles: new(Tiles), Robots: new(Robots)}
+}
+
 // CmdArgs returns an argument slice build by task parameters.
 func (a *Args) CmdArgs() []string {
 	s := []string{
-		argTopLeftTile, a.Tiles.TopLeft,
-		argTopRightTile, a.Tiles.TopRight,
-		argBottomRightTile, a.Tiles.BottomRight,
-		argBottomLeftTile, a.Tiles.BottomLeft,
+		argVar(fnTopLeftTile), a.Tiles.TopLeft,
+		argVar(fnTopRightTile), a.Tiles.TopRight,
+		argVar(fnBottomRightTile), a.Tiles.BottomRight,
+		argVar(fnBottomLeftTile), a.Tiles.BottomLeft,
 
-		argYellowRobot, a.Robots.Yellow.String(),
-		argRedRobot, a.Robots.Red.String(),
-		argGreenRobot, a.Robots.Green.String(),
-		argBlueRobot, a.Robots.Blue.String(),
-		argSilverRobot, a.Robots.Silver.String(),
+		argVar(fnYellowRobot), a.Robots.Yellow.String(),
+		argVar(fnRedRobot), a.Robots.Red.String(),
+		argVar(fnGreenRobot), a.Robots.Green.String(),
+		argVar(fnBlueRobot), a.Robots.Blue.String(),
+		argVar(fnSilverRobot), a.Robots.Silver.String(),
 
-		argTargetSymbol, a.TargetSymbol.String(),
+		argVar(fnTargetSymbol), a.TargetSymbol.String(),
 	}
 	if a.CheckRobotOnSymbol {
-		s = append(s, argCheckRobotOnSymbol)
+		s = append(s, argVar(fnCheckRobotOnSymbol))
 	}
 	return s
 }
@@ -83,7 +125,7 @@ func parseCoordinate(s string) (Coordinate, error) {
 }
 
 func parseFlag(name string, cmdArgs []string, errorHandling flag.ErrorHandling) (*Args, error) {
-	a := new(Args)
+	a := newArgs()
 
 	fs := flag.NewFlagSet(name, errorHandling)
 
@@ -91,20 +133,20 @@ func parseFlag(name string, cmdArgs []string, errorHandling flag.ErrorHandling) 
 	a.Robots.addFlag(fs)
 
 	var err error
-	a.TargetSymbol = defTargetSymbol
-	fs.Func(fnTargetSymbol, "target symbol like yellowPyramid or cosmic", func(s string) error {
+	a.TargetSymbol = envSymbol(fnTargetSymbol, defTargetSymbol)
+	fs.Func(fnTargetSymbol, usage(fnTargetSymbol, "target symbol like yellowPyramid or cosmic"), func(s string) error {
 		a.TargetSymbol, err = parseSymbol(s)
 		return err
 	})
 
-	fs.BoolVar(&a.CheckRobotOnSymbol, fnCheckRobotOnSymbol, defCheckRobotOnSymbol, "check if robots sit on symbol")
+	fs.BoolVar(&a.CheckRobotOnSymbol, fnCheckRobotOnSymbol, envBool(fnCheckRobotOnSymbol, defCheckRobotOnSymbol), usage(fnCheckRobotOnSymbol, "check if robots sit on symbol"))
 
 	fs.Parse(cmdArgs)
 
 	if err := a.Tiles.check(); err != nil {
 		return nil, err
 	}
-	if err := a.Robots.check(&a.Tiles, a.CheckRobotOnSymbol); err != nil {
+	if err := a.Robots.check(a.Tiles, a.CheckRobotOnSymbol); err != nil {
 		return nil, err
 	}
 	return a, nil
@@ -153,7 +195,7 @@ func ParseURL(u *url.URL) (*Args, error) {
 		return nil, err
 	}
 
-	if err := a.Robots.parseURL(u, &a.Tiles, a.CheckRobotOnSymbol); err != nil {
+	if err := a.Robots.parseURL(u, a.Tiles, a.CheckRobotOnSymbol); err != nil {
 		return nil, err
 	}
 

@@ -6,7 +6,6 @@ import (
 	"net/url"
 )
 
-// Tile constants.
 const (
 	fnTopLeftTile     = "ttl"
 	fnTopRightTile    = "ttr"
@@ -14,14 +13,6 @@ const (
 	fnBottomLeftTile  = "tbl"
 )
 
-const (
-	argTopLeftTile     = "-" + fnTopLeftTile
-	argTopRightTile    = "-" + fnTopRightTile
-	argBottomRightTile = "-" + fnBottomRightTile
-	argBottomLeftTile  = "-" + fnBottomLeftTile
-)
-
-// Default parameters.
 var (
 	defTopLeftTile     = "A1F"
 	defTopRightTile    = "A2F"
@@ -51,13 +42,13 @@ func (t *Tiles) check() error {
 }
 
 func (t *Tiles) addFlag(fs *flag.FlagSet) {
-	fs.StringVar(&t.TopLeft, fnTopLeftTile, defTopLeftTile, "top left tile")
-	fs.StringVar(&t.TopRight, fnTopRightTile, defTopRightTile, "top right tile")
-	fs.StringVar(&t.BottomLeft, fnBottomLeftTile, defBottomLeftTile, "top bottom left tile")
-	fs.StringVar(&t.BottomRight, fnBottomRightTile, defBottomRightTile, "bottom right tile")
+	fs.StringVar(&t.TopLeft, fnTopLeftTile, envString(fnTopLeftTile, defTopLeftTile), usage(fnTopLeftTile, "top left tile"))
+	fs.StringVar(&t.TopRight, fnTopRightTile, envString(fnTopRightTile, defTopRightTile), usage(fnTopRightTile, "top right tile"))
+	fs.StringVar(&t.BottomLeft, fnBottomLeftTile, envString(fnBottomLeftTile, defBottomLeftTile), usage(fnBottomLeftTile, "top bottom left tile"))
+	fs.StringVar(&t.BottomRight, fnBottomRightTile, envString(fnBottomRightTile, defBottomRightTile), usage(fnBottomRightTile, "bottom right tile"))
 }
 
-// ParseURL extract the tiles out of a URL query.
+// ParseURL extract tiles out of a URL query.
 func (t *Tiles) ParseURL(u *url.URL) error {
 	query := u.Query()
 	t.TopLeft = queryString(query, fnTopLeftTile, defTopLeftTile)
