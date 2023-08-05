@@ -1,7 +1,6 @@
 package task
 
 import (
-	"flag"
 	"fmt"
 	"net/url"
 )
@@ -39,13 +38,6 @@ func (t *Tiles) check() error {
 		tileMap[tile] = true
 	}
 	return nil
-}
-
-func (t *Tiles) addFlag(fs *flag.FlagSet) {
-	fs.StringVar(&t.TopLeft, fnTopLeftTile, envString(fnTopLeftTile, defTopLeftTile), usage(fnTopLeftTile, "top left tile"))
-	fs.StringVar(&t.TopRight, fnTopRightTile, envString(fnTopRightTile, defTopRightTile), usage(fnTopRightTile, "top right tile"))
-	fs.StringVar(&t.BottomLeft, fnBottomLeftTile, envString(fnBottomLeftTile, defBottomLeftTile), usage(fnBottomLeftTile, "top bottom left tile"))
-	fs.StringVar(&t.BottomRight, fnBottomRightTile, envString(fnBottomRightTile, defBottomRightTile), usage(fnBottomRightTile, "bottom right tile"))
 }
 
 // ParseURL extract tiles out of a URL query.

@@ -1,7 +1,6 @@
 package task
 
 import (
-	"flag"
 	"fmt"
 	"net/url"
 
@@ -64,36 +63,6 @@ func (r *Robots) check(t *Tiles, checkRobotOnSymbol bool) error {
 		robotMap[robot] = true
 	}
 	return nil
-}
-
-func (r *Robots) addFlag(fs *flag.FlagSet) {
-	var err error
-	r.Yellow = envCoord(fnYellowRobot, defYellowRobot)
-	r.Red = envCoord(fnRedRobot, defRedRobot)
-	r.Green = envCoord(fnGreenRobot, defGreenRobot)
-	r.Blue = envCoord(fnBlueRobot, defBlueRobot)
-	r.Silver = envCoord(fnSilverRobot, defSilverRobot)
-
-	fs.Func(fnYellowRobot, usage(fnYellowRobot, "yellow robot position x,y"), func(s string) error {
-		r.Yellow, err = parseCoordinate(s)
-		return err
-	})
-	fs.Func(fnRedRobot, usage(fnRedRobot, "red robot position x,y"), func(s string) error {
-		r.Red, err = parseCoordinate(s)
-		return err
-	})
-	fs.Func(fnGreenRobot, usage(fnGreenRobot, "green robot position x,y"), func(s string) error {
-		r.Green, err = parseCoordinate(s)
-		return err
-	})
-	fs.Func(fnBlueRobot, usage(fnBlueRobot, "blue robot position x,y"), func(s string) error {
-		r.Blue, err = parseCoordinate(s)
-		return err
-	})
-	fs.Func(fnSilverRobot, usage(fnSilverRobot, "silver robot position x,y"), func(s string) error {
-		r.Silver, err = parseCoordinate(s)
-		return err
-	})
 }
 
 func (r *Robots) parseURL(u *url.URL, t *Tiles, checkRobotOnSymbol bool) error {

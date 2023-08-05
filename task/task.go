@@ -5,6 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"golang.org/x/exp/slog"
@@ -17,6 +19,35 @@ type Coordinate struct {
 }
 
 func (c Coordinate) String() string { return fmt.Sprintf("%d,%d", c.X, c.Y) }
+
+// MarshalText implments the encoding/MarshalText interface.
+func (c Coordinate) MarshalText() (text []byte, err error) {
+	return []byte(c.String()), nil
+}
+
+func parseCoordinate(s string) (Coordinate, error) {
+	coord := Coordinate{}
+	p := strings.Split(s, ",")
+	if len(p) != 2 {
+		return coord, fmt.Errorf("invalid coordinate format: %s", s)
+	}
+	x64, err := strconv.ParseInt(p[0], 10, 8)
+	if err != nil {
+		return coord, fmt.Errorf("invalid x coordinate %s - %w", s, err)
+	}
+	y64, err := strconv.ParseInt(p[1], 10, 8)
+	if err != nil {
+		return coord, fmt.Errorf("invalid y coordinate %s - %w", s, err)
+	}
+	coord.X, coord.Y = int(x64), int(y64)
+	return coord, nil
+}
+
+// UnmarshalText implments the encoding/UnmarshalText interface.
+func (c *Coordinate) UnmarshalText(text []byte) (err error) {
+	*c, err = parseCoordinate(string(text))
+	return err
+}
 
 // Symbol is the type of a symbol.
 type Symbol byte
@@ -116,9 +147,31 @@ var symbolMap = map[string]Symbol{
 
 func (s Symbol) String() string {
 	if int(s) >= len(symbolStrs) {
-		panic(fmt.Sprintf("invalid symbol %d", s))
+		panic(fmt.Errorf("invalid symbol %d", s))
 	}
 	return symbolStrs[s]
+}
+
+func parseSymbol(s string) (Symbol, error) {
+	symbol, ok := symbolMap[s]
+	if !ok {
+		return symbol, fmt.Errorf("invalid symbol %s", s)
+	}
+	return symbol, nil
+}
+
+// MarshalText implments the encoding/MarshalText interface.
+func (s Symbol) MarshalText() (text []byte, err error) {
+	if int(s) >= len(symbolStrs) {
+		return nil, fmt.Errorf("invalid symbol %d", s)
+	}
+	return []byte(symbolStrs[s]), nil
+}
+
+// UnmarshalText implments the encoding/UnmarshalText interface.
+func (s *Symbol) UnmarshalText(text []byte) (err error) {
+	*s, err = parseSymbol(string(text))
+	return err
 }
 
 // Robot is the type of a robot.

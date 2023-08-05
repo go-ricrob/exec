@@ -49,8 +49,8 @@ func envSymbol(name string, def Symbol) Symbol {
 	return def
 }
 
-func usage(key, text string) string {
-	return fmt.Sprintf("%s (environment variable %s)", text, envVar(key))
+func usage(name, text string) string {
+	return fmt.Sprintf("%s [environment variable %s]", text, envVar(name))
 }
 
 const (
@@ -98,47 +98,23 @@ func (a *Args) CmdArgs() []string {
 	return s
 }
 
-func parseSymbol(s string) (Symbol, error) {
-	symbol, ok := symbolMap[s]
-	if !ok {
-		return symbol, fmt.Errorf("invalid symbol %s", s)
-	}
-	return symbol, nil
-}
-
-func parseCoordinate(s string) (Coordinate, error) {
-	coord := Coordinate{}
-	p := strings.Split(s, ",")
-	if len(p) != 2 {
-		return coord, fmt.Errorf("invalid coordinate format: %s", s)
-	}
-	x64, err := strconv.ParseInt(p[0], 10, 8)
-	if err != nil {
-		return coord, fmt.Errorf("invalid x coordinate %s - %w", s, err)
-	}
-	y64, err := strconv.ParseInt(p[1], 10, 8)
-	if err != nil {
-		return coord, fmt.Errorf("invalid y coordinate %s - %w", s, err)
-	}
-	coord.X, coord.Y = int(x64), int(y64)
-	return coord, nil
-}
-
 func parseFlag(name string, cmdArgs []string, errorHandling flag.ErrorHandling) (*Args, error) {
 	a := newArgs()
 
 	fs := flag.NewFlagSet(name, errorHandling)
 
-	a.Tiles.addFlag(fs)
-	a.Robots.addFlag(fs)
+	fs.StringVar(&a.Tiles.TopLeft, fnTopLeftTile, envString(fnTopLeftTile, defTopLeftTile), usage(fnTopLeftTile, "top left tile"))
+	fs.StringVar(&a.Tiles.TopRight, fnTopRightTile, envString(fnTopRightTile, defTopRightTile), usage(fnTopRightTile, "top right tile"))
+	fs.StringVar(&a.Tiles.BottomLeft, fnBottomLeftTile, envString(fnBottomLeftTile, defBottomLeftTile), usage(fnBottomLeftTile, "top bottom left tile"))
+	fs.StringVar(&a.Tiles.BottomRight, fnBottomRightTile, envString(fnBottomRightTile, defBottomRightTile), usage(fnBottomRightTile, "bottom right tile"))
 
-	var err error
-	a.TargetSymbol = envSymbol(fnTargetSymbol, defTargetSymbol)
-	fs.Func(fnTargetSymbol, usage(fnTargetSymbol, "target symbol like yellowPyramid or cosmic"), func(s string) error {
-		a.TargetSymbol, err = parseSymbol(s)
-		return err
-	})
+	fs.TextVar(&a.Robots.Yellow, fnYellowRobot, envCoord(fnYellowRobot, defYellowRobot), usage(fnYellowRobot, "yellow robot position x,y"))
+	fs.TextVar(&a.Robots.Red, fnRedRobot, envCoord(fnRedRobot, defRedRobot), usage(fnRedRobot, "red robot position x,y"))
+	fs.TextVar(&a.Robots.Green, fnGreenRobot, envCoord(fnGreenRobot, defGreenRobot), usage(fnGreenRobot, "green robot position x,y"))
+	fs.TextVar(&a.Robots.Blue, fnBlueRobot, envCoord(fnBlueRobot, defBlueRobot), usage(fnBlueRobot, "blue robot position x,y"))
+	fs.TextVar(&a.Robots.Silver, fnSilverRobot, envCoord(fnSilverRobot, defSilverRobot), usage(fnSilverRobot, "silver robot position x,y"))
 
+	fs.TextVar(&a.TargetSymbol, fnTargetSymbol, envSymbol(fnTargetSymbol, defTargetSymbol), usage(fnTargetSymbol, "target symbol like yellowPyramid or cosmic"))
 	fs.BoolVar(&a.CheckRobotOnSymbol, fnCheckRobotOnSymbol, envBool(fnCheckRobotOnSymbol, defCheckRobotOnSymbol), usage(fnCheckRobotOnSymbol, "check if robots sit on symbol"))
 
 	fs.Parse(cmdArgs)
