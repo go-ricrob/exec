@@ -2,7 +2,7 @@ module github.com/go-ricrob/exec
 
 go 1.21
 
-require github.com/go-ricrob/game v0.0.8
+require github.com/go-ricrob/game v0.0.9
 
 //replace (
 //	github.com/go-ricrob/game => ../game
