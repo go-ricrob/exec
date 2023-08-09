@@ -4,12 +4,11 @@ package task
 import (
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
 	"time"
-
-	"golang.org/x/exp/slog"
 )
 
 // Coordinate defines a two dimensional coordinate.

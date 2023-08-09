@@ -1,11 +1,8 @@
 module github.com/go-ricrob/exec
 
-go 1.20
+go 1.21
 
-require (
-	github.com/go-ricrob/game v0.0.7
-	golang.org/x/exp v0.0.0-20230801115018-d63ba01acd4b
-)
+require github.com/go-ricrob/game v0.0.8
 
 //replace (
 //	github.com/go-ricrob/game => ../game
